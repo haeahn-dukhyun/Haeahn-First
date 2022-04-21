@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Customer from "./components/Customer";
+import Project from "./components/Project";
 import "./App.css";
 import { createTheme } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
@@ -9,6 +9,7 @@ import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import { withStyles } from "@mui/styles";
+import { styled } from "@mui/material/styles";
 import CircularProgress from "@mui/material/CircularProgress";
 import CustomerAdd from "./components/CustomerAdd";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -20,6 +21,10 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import { purple } from "@mui/material/colors";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import Grid from "@mui/material/Grid";
+import Stack from "@mui/material/Stack";
 
 const th = createTheme({
   status: {},
@@ -38,7 +43,7 @@ const th = createTheme({
 const styles = (theme) => ({
   root: {
     width: "100%",
-    minWidth: 1080,
+    //minWidth: 1080,
   },
   menu: {
     marginTop: 15,
@@ -114,13 +119,23 @@ const styles = (theme) => ({
   },
 });
 
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: "left",
+  color: theme.palette.text.secondary,
+}));
+
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      customers: "",
+      projects: "",
       completed: 0,
       searchKeyword: "",
+      projectInfo: [],
+      currentId: "",
     };
     this.stateRefresh = this.stateRefresh.bind(this);
     this.handleValueChange = this.handleValueChange.bind(this);
@@ -134,19 +149,19 @@ class App extends Component {
 
   stateRefresh() {
     this.setState({
-      customers: "",
+      projects: "",
       completed: 0,
       searchKeyword: "",
     });
-    this.callApi()
-      .then((res) => this.setState({ customers: res }))
+    this.callApi("/api/projects")
+      .then((res) => this.setState({ projects: res }))
       .catch((err) => console.log(err));
   }
 
   componentDidMount() {
     this.timer = setInterval(this.progress, 20);
-    this.callApi()
-      .then((res) => this.setState({ customers: res }))
+    this.callApi("/api/projects")
+      .then((res) => this.setState({ projects: res }))
       .catch((err) => console.log(err));
   }
 
@@ -154,8 +169,8 @@ class App extends Component {
     clearInterval(this.timer);
   }
 
-  callApi = async () => {
-    const response = await fetch("/api/customers");
+  callApi = async (api) => {
+    const response = await fetch(api);
     const body = await response.json();
     return body;
   };
@@ -165,37 +180,79 @@ class App extends Component {
     this.setState({ completed: completed >= 100 ? 0 : completed + 1 });
   };
 
+  informationComponents = (data) => {
+    console.log("informationComponents = (data) => { : ", data);
+    return data.map((c) => {
+      return (
+        <div key={c.ID}>
+          <Grid container spacing={1}>
+            <Grid item style={{ width: "150px" }}>
+              <Item>지번</Item>
+            </Grid>
+            <Grid item xs>
+              <Item>project info : {c.ID}</Item>
+            </Grid>
+          </Grid>
+        </div>
+      );
+    });
+  };
+
+  handleClick = (e, id, name) => {
+    e.preventDefault();
+
+    //this.setState({ currentId: id });
+    //console.log(this.state.currentId);
+
+    let _projectinfo = [];
+
+    this.callApi("/api/projects/info/" + id)
+      .then((res) => {
+        let keys = Object.keys(res[0]);
+        for (let i = 0; i < keys.length; i++) {
+          let key = keys[i];
+          _projectinfo.push(
+            <div key={i}>
+              <Grid container spacing={1}>
+                <Grid item style={{ width: "150px" }}>
+                  <Item>{key}</Item>
+                </Grid>
+                <Grid item xs>
+                  <Item>{res[0][key]}</Item>
+                </Grid>
+              </Grid>
+            </div>
+          );
+        }
+      })
+      .catch((err) => console.log(err));
+
+    this.setState({
+      projectInfo: _projectinfo,
+    });
+  };
+
   render() {
     const filteredComponents = (data) => {
       data = data.filter((c) => {
-        return c.name.indexOf(this.state.searchKeyword) > -1;
+        return c.NM_PROJ.indexOf(this.state.searchKeyword) > -1;
       });
       return data.map((c) => {
         return (
-          <Customer
+          <Project
             stateRefresh={this.stateRefresh}
-            key={c.id}
-            id={c.id}
-            image={c.image}
-            name={c.name}
-            birthday={c.birthday}
-            gender={c.gender}
-            job={c.job}
+            key={c.ID}
+            id={c.ID}
+            cd={c.CD_PROJ}
+            name={c.NM_PROJ}
+            onRowClick={this.handleClick}
           />
         );
       });
     };
 
     const { classes } = this.props;
-    const cellList = [
-      "번호",
-      "프로필 이미지",
-      "이름",
-      "생년월일",
-      "성별",
-      "직업",
-      "설정",
-    ];
+    const cellList = ["ID", "Code", "Name", "Setting"];
     return (
       <div className={classes.root}>
         <AppBar position="static">
@@ -213,7 +270,7 @@ class App extends Component {
               color="inherit"
               noWrap
             >
-              고객 관리 시스템
+              규모검토시스템
             </Typography>
             <div className={classes.grow} />
             <div className={classes.search}>
@@ -236,7 +293,7 @@ class App extends Component {
         <div className={classes.menu}>
           <CustomerAdd stateRefresh={this.stateRefresh} />
         </div>
-        <Paper className={classes.paper}>
+        <Paper variant="outlined" className={classes.paper}>
           <Table>
             <TableHead>
               <TableRow>
@@ -250,8 +307,8 @@ class App extends Component {
               </TableRow>
             </TableHead>
             <TableBody>
-              {this.state.customers ? (
-                filteredComponents(this.state.customers)
+              {this.state.projects ? (
+                filteredComponents(this.state.projects)
               ) : (
                 <TableRow>
                   <TableCell colSpan="6" align="center">
@@ -265,6 +322,38 @@ class App extends Component {
               )}
             </TableBody>
           </Table>
+        </Paper>
+        <br />
+        <div>Project Infomation</div>
+        <br />
+        <Paper className={classes.paper}>
+          <Stack spacing={2}>
+            {this.state.projectInfo}
+            {/* 
+            <div>
+              <Grid container spacing={1}>
+                <Grid item style={{ width: "150px" }}>
+                  <Item>지번</Item>
+                </Grid>
+                <Grid item xs>
+                  <Item>xs=6kjhjkhhs[duhfu</Item>
+                </Grid>
+              </Grid>
+            </div>
+           <div>
+              <Grid container spacing={1}>
+                <Grid item xs={false}>
+                  <Item>variable width content</Item>
+                </Grid>
+                <Grid item xs={6}>
+                  <Item>xs=6kjhjkhhs[duhfu</Item>
+                </Grid>
+                <Grid item xs={3}>
+                  <Item>xs</Item>
+                </Grid>
+              </Grid>
+            </div> */}
+          </Stack>
         </Paper>
       </div>
     );
