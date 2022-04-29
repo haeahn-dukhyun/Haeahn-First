@@ -25,6 +25,8 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
+import Menu from "@mui/material/Menu";
+import MenuItem from '@mui/material/MenuItem';
 
 const th = createTheme({
   status: {},
@@ -253,6 +255,7 @@ class App extends Component {
 
     const { classes } = this.props;
     const cellList = ["ID", "Code", "Name", "Setting"];
+
     return (
       <div className={classes.root}>
         <AppBar position="static">
@@ -327,33 +330,7 @@ class App extends Component {
         <div>Project Infomation</div>
         <br />
         <Paper className={classes.paper}>
-          <Stack spacing={2}>
-            {this.state.projectInfo}
-            {/* 
-            <div>
-              <Grid container spacing={1}>
-                <Grid item style={{ width: "150px" }}>
-                  <Item>지번</Item>
-                </Grid>
-                <Grid item xs>
-                  <Item>xs=6kjhjkhhs[duhfu</Item>
-                </Grid>
-              </Grid>
-            </div>
-           <div>
-              <Grid container spacing={1}>
-                <Grid item xs={false}>
-                  <Item>variable width content</Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>xs=6kjhjkhhs[duhfu</Item>
-                </Grid>
-                <Grid item xs={3}>
-                  <Item>xs</Item>
-                </Grid>
-              </Grid>
-            </div> */}
-          </Stack>
+          <Stack spacing={2}>{this.state.projectInfo}</Stack>
         </Paper>
       </div>
     );
