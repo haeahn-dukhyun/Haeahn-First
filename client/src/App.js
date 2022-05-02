@@ -26,7 +26,12 @@ import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import Menu from "@mui/material/Menu";
-import MenuItem from '@mui/material/MenuItem';
+import MenuItem from "@mui/material/MenuItem";
+import Button from "@mui/material/Button";
+import {
+  FormIt,
+  WSM,
+} from "https://formit3d.github.io/SharedPluginUtilities/FormIt.mod.js";
 
 const th = createTheme({
   status: {},
@@ -138,9 +143,13 @@ class App extends Component {
       searchKeyword: "",
       projectInfo: [],
       currentId: "",
+      x: 0,
+      y: 0,
     };
     this.stateRefresh = this.stateRefresh.bind(this);
     this.handleValueChange = this.handleValueChange.bind(this);
+    this.handleCreateBlock = this.handleCreateBlock.bind(this);
+    this.handleGetArea = this.handleGetArea.bind(this);
   }
 
   handleValueChange(e) {
@@ -233,6 +242,181 @@ class App extends Component {
       projectInfo: _projectinfo,
     });
   };
+
+  async handleCreateBlock(e) {
+    console.log("handleTest: ", e.target);
+    console.log("async createBlock(): ", this.state.x);
+    const w = this.state.x + 30,
+      h = this.state.y + 20,
+      l = 60;
+    const pt1 = WSM.Geom.Point3d(this.state.x, this.state.y, 0);
+    const pt2 = WSM.Geom.Point3d(w, h, l);
+    const histID = await FormIt.GroupEdit.GetEditingHistoryID();
+    const blockID = await WSM.APICreateBlock(histID, await pt1, await pt2);
+
+    console.log("createBlock(): histID: ", histID);
+    console.log("createBlock(): blockID: ", blockID);
+
+    this.setState({
+      x: w,
+      y: h,
+    });
+  }
+
+  doSomething(id) {
+    return new Promise((resolve, reject) => {
+      console.log(id);
+      console.log(resolve);
+      console.log(reject);
+    })
+  }
+
+
+  async handleGetArea(e) {
+    console.log("handleGetArea: start: ", e.target);
+
+    let selection = await FormIt.Selection.GetSelections();
+
+    //let props = FormIt.Model.GetPropertiesForSelected();
+
+    //console.log("GetPropertiesForSelected: " + props);
+
+    for (var j = 0; j < selection.length; j++) {
+      let historyDepth = selection[j]["ids"].length - 1;
+
+      let a = selection[j]["ids"][historyDepth];
+
+      let id = a["Object"];
+
+
+
+      var objectProperties = await WSM.APIGetObjectPropertiesReadOnly(historyDepth, id);
+
+      console.log(objectProperties);
+      // bReportAreaByLevel: true
+      // sObjectName: "lkjkjskldjjlLVFJLJLJKJKLJKLJKLJ"
+
+      var objectName = await WSM.APIGetObjectNameReadOnly(historyDepth, id);
+
+      console.log(objectName);
+
+
+      var Attributes = await WSM.APIGetObjectAttributesReadOnly(historyDepth, id);
+
+      console.log(Attributes);
+
+
+      let props = await FormIt.Model.GetPropertiesForSelected();
+
+      console.log(props);
+
+
+      let getObjectName = await FormIt.Model.GetObjectName(id);
+
+      console.log("getObjectName", getObjectName);
+
+
+      let getProjectSiteArea = await FormIt.Model.GetProjectSiteArea();
+
+      console.log("getProjectSiteArea", getProjectSiteArea);
+
+
+      let getProjectTargetArea = await FormIt.Model.GetProjectTargetArea();
+
+      console.log("getProjectTargetArea", getProjectTargetArea);
+
+
+      let getBuildingType = await FormIt.GetBuildingType();
+
+      console.log("getBuildingType", getBuildingType);
+
+
+      let getAllLayers = await FormIt.Layers.GetAllLayers();
+
+      console.log("getAllLayers", getAllLayers);
+
+
+      let getAllLayerData = await FormIt.Layers.GetAllLayerData();
+
+      console.log("getAllLayerData", getAllLayerData);
+
+
+      for (var m = 0; m < getAllLayers.length; m++) {
+        let getLayerData = await FormIt.Layers.GetLayerData(getAllLayers[m]);
+        console.log("getLayerData", getLayerData);
+      }
+
+      let getObjectLayerID = await FormIt.Layers.GetObjectLayerID(historyDepth, id)	
+
+      console.log("getObjectLayerID", getObjectLayerID);
+
+
+      //let getLayerData = await FormIt.Layers.GetLayerData(getObjectLayerID);
+
+      //console.log("getLayerData", getLayerData);
+
+
+      let objectReportsAreaByLevel = await FormIt.Model.ObjectReportsAreaByLevel(id);
+
+      console.log("objectReportsAreaByLevel", objectReportsAreaByLevel);
+
+
+      let getTotalGrossArea = await FormIt.Model.GetTotalGrossArea();
+
+      console.log("getTotalGrossArea", getTotalGrossArea);
+      // getTotalGrossArea 3288
+
+
+
+      //FormIt.Model.SetObjectName(id, "lkjkjskldjjlLVFJLJLJKJKLJKLJKLJ");
+
+      // get the name of this object, then push the results into an array
+      //var objectName = objectProperties.sObjectName;
+
+      //console.log(objectName);
+
+      //console.log("Object ID: " + id);
+
+      //let objName = FormIt.Model.ObjectReportsAreaByLevel(id);
+
+      //console.log("ObjectReportsAreaByLevel: " + objName);
+
+      // let objProperties = FormIt.Model.GetPropertiesForSelected(a["Object"]);
+
+      // console.log("objProperties: " + objProperties.length);
+
+      // for (var m = 0; m < objProperties.length; j++) {
+      //   let aaa = objProperties[m];
+      //   console.log("objProperty: " + aaa);
+      // }
+
+      //console.log("Object Name: " + objName);
+      //console.log("objProperties: " + objProperties);
+      // let levels = await FormIt.Levels.GetLevelsData(historyDepth, true);
+
+      // for (var m = 0; m < levels.length; m++) {
+      //   let nLevelID = levels[m]["Id"]["Object"];
+      //   console.log(levels[m]);
+      //   //let nLevelID = levels[m]["Id"][historyDepth]["Object"];
+      //   //await FormIt.Levels.ChangeLevelElevation(historyDepth, nLevelID, 15);
+
+      //   let nObjectID = aCurrentSelection[j]["ids"][historyDepth]["Object"];
+
+      //   let dArea = await FormIt.Levels.GetAreaForObjects(
+      //     historyDepth,
+      //     nLevelID,
+      //     nObjectID
+      //   );
+
+      //   //console.log(dArea);
+      // }
+
+      //let isLevel = await FormIt.Levels.IsExistingLevel(historyDepth, "level1");
+      //let level = await FormIt.Levels.GetLevelData(historyDepth, "level1");
+    }
+
+    console.log("handleGetArea: end");
+  }
 
   render() {
     const filteredComponents = (data) => {
@@ -328,6 +512,27 @@ class App extends Component {
         </Paper>
         <br />
         <div>Project Infomation</div>
+        <br />
+        <Paper className={classes.paper}>
+          <Stack spacing={2}>{this.state.projectInfo}</Stack>
+        </Paper>
+
+        <br />
+        <div>면적 정보</div>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={this.handleCreateBlock}
+        >
+          블럭생성
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={this.handleGetArea}
+        >
+          동/층별
+        </Button>
         <br />
         <Paper className={classes.paper}>
           <Stack spacing={2}>{this.state.projectInfo}</Stack>
