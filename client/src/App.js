@@ -32,6 +32,7 @@ import {
   FormIt,
   WSM,
 } from "https://formit3d.github.io/SharedPluginUtilities/FormIt.mod.js";
+import DataTable from "./components/DataTable";
 
 const th = createTheme({
   status: {},
@@ -59,8 +60,9 @@ const styles = (theme) => ({
     justifyContent: "center",
   },
   paper: {
-    marginLeft: 18,
-    marginRight: 18,
+    marginTop: 15,
+    marginLeft: 10,
+    marginRight: 10,
   },
   progress: {
     margin: th.spacing.unit * 2,
@@ -145,6 +147,7 @@ class App extends Component {
       currentId: "",
       x: 0,
       y: 0,
+      tableData: [],
     };
     this.stateRefresh = this.stateRefresh.bind(this);
     this.handleValueChange = this.handleValueChange.bind(this);
@@ -268,9 +271,8 @@ class App extends Component {
       console.log(id);
       console.log(resolve);
       console.log(reject);
-    })
+    });
   }
-
 
   async handleGetArea(e) {
     console.log("handleGetArea: start: ", e.target);
@@ -288,9 +290,10 @@ class App extends Component {
 
       let id = a["Object"];
 
-
-
-      var objectProperties = await WSM.APIGetObjectPropertiesReadOnly(historyDepth, id);
+      var objectProperties = await WSM.APIGetObjectPropertiesReadOnly(
+        historyDepth,
+        id
+      );
 
       console.log(objectProperties);
       // bReportAreaByLevel: true
@@ -300,73 +303,97 @@ class App extends Component {
 
       console.log(objectName);
 
-
-      var Attributes = await WSM.APIGetObjectAttributesReadOnly(historyDepth, id);
+      var Attributes = await WSM.APIGetObjectAttributesReadOnly(
+        historyDepth,
+        id
+      );
 
       console.log(Attributes);
-
 
       let props = await FormIt.Model.GetPropertiesForSelected();
 
       console.log(props);
 
-
       let getObjectName = await FormIt.Model.GetObjectName(id);
 
       console.log("getObjectName", getObjectName);
-
 
       let getProjectSiteArea = await FormIt.Model.GetProjectSiteArea();
 
       console.log("getProjectSiteArea", getProjectSiteArea);
 
-
       let getProjectTargetArea = await FormIt.Model.GetProjectTargetArea();
 
       console.log("getProjectTargetArea", getProjectTargetArea);
-
 
       let getBuildingType = await FormIt.GetBuildingType();
 
       console.log("getBuildingType", getBuildingType);
 
-
       let getAllLayers = await FormIt.Layers.GetAllLayers();
 
       console.log("getAllLayers", getAllLayers);
 
-
       let getAllLayerData = await FormIt.Layers.GetAllLayerData();
 
       console.log("getAllLayerData", getAllLayerData);
-
 
       for (var m = 0; m < getAllLayers.length; m++) {
         let getLayerData = await FormIt.Layers.GetLayerData(getAllLayers[m]);
         console.log("getLayerData", getLayerData);
       }
 
-      let getObjectLayerID = await FormIt.Layers.GetObjectLayerID(historyDepth, id)	
+      let getObjectLayerID = await FormIt.Layers.GetObjectLayerID(
+        historyDepth,
+        id
+      );
 
       console.log("getObjectLayerID", getObjectLayerID);
-
 
       //let getLayerData = await FormIt.Layers.GetLayerData(getObjectLayerID);
 
       //console.log("getLayerData", getLayerData);
 
-
-      let objectReportsAreaByLevel = await FormIt.Model.ObjectReportsAreaByLevel(id);
+      let objectReportsAreaByLevel =
+        await FormIt.Model.ObjectReportsAreaByLevel(id);
 
       console.log("objectReportsAreaByLevel", objectReportsAreaByLevel);
-
 
       let getTotalGrossArea = await FormIt.Model.GetTotalGrossArea();
 
       console.log("getTotalGrossArea", getTotalGrossArea);
       // getTotalGrossArea 3288
 
+      // Level Id 전체 가져오기
+      let getLevels = await FormIt.Levels.GetLevels(historyDepth, true);
+      console.log("getLevels", getLevels);
 
+      // Level Data 전체 가져오기
+      let getLevelsData = await FormIt.Levels.GetLevelsData(historyDepth, true);
+      console.log("getLevelsData", getLevelsData);
+
+      // 레벨 중 최고 높은 것의 elevation 가져오기
+      let getMaxLevelElevation = await FormIt.Levels.GetMaxLevelElevation(
+        historyDepth
+      );
+      console.log("getMaxLevelElevation", getMaxLevelElevation);
+
+      // 레벨 중 최고 낮은 것의 elevation 가져오기
+      let getMinLevelElevation = await FormIt.Levels.GetMinLevelElevation(
+        historyDepth
+      );
+      console.log("getMinLevelElevation", getMinLevelElevation);
+
+      // 선택한 오브젝트의 레벨 ID 가져오기
+      let getLevelIDsFromSelectedObjects =
+        await FormIt.Levels.GetLevelIDsFromSelectedObjects(historyDepth);
+      console.log(
+        "getLevelIDsFromSelectedObjects",
+        getLevelIDsFromSelectedObjects
+      );
+
+      console.log("this.props.tableData", this.props.tableData);
+      this.setState({ tableData: this.props.tableData });
 
       //FormIt.Model.SetObjectName(id, "lkjkjskldjjlLVFJLJLJKJKLJKLJKLJ");
 
@@ -438,7 +465,7 @@ class App extends Component {
     };
 
     const { classes } = this.props;
-    const cellList = ["ID", "Code", "Name", "Setting"];
+    const cellList = ["ID", "Code", "Name"];
 
     return (
       <div className={classes.root}>
@@ -535,7 +562,7 @@ class App extends Component {
         </Button>
         <br />
         <Paper className={classes.paper}>
-          <Stack spacing={2}>{this.state.projectInfo}</Stack>
+          <DataTable/>
         </Paper>
       </div>
     );
